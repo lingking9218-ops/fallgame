@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -15,132 +16,318 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
 
 
 <body>
 
-    <div id="app">
-
-        <!-- ================================ -->
-        <!-- 遊戲標題 -->
-        <!-- ================================ -->
-
-        <h1>🎮 AI Card Challenge</h1>
-
-        <p class="subtitle">
-            玩家創造挑戰，玩家挑戰遊戲
-        </p>
+<div id="app">
 
 
-        <!-- ================================ -->
-        <!-- 主選單 -->
-        <!-- ================================ -->
+    <!-- ================================= -->
+    <!-- 遊戲標題 -->
+    <!-- ================================= -->
 
-        <div id="menu">
-
-            <button id="createRoom">
-                🏠 建立房間
-            </button>
+    <h1>
+        🎮 AI Card Challenge
+    </h1>
 
 
-            <div class="join-area">
-
-                <input
-                    id="roomCode"
-                    type="text"
-                    maxlength="4"
-                    inputmode="numeric"
-                    autocomplete="off"
-                    placeholder="輸入4碼房號"
-                >
-
-                <button id="joinRoom">
-                    🔗 加入房間
-                </button>
-
-            </div>
-
-        </div>
+    <p class="subtitle">
+        玩家創造挑戰，玩家挑戰遊戲
+    </p>
 
 
-        <!-- ================================ -->
-        <!-- 房間畫面 -->
-        <!-- ================================ -->
 
-        <div
-            id="roomScreen"
-            class="hidden"
-        >
+    <!-- ================================= -->
+    <!-- 主選單 -->
+    <!-- ================================= -->
 
-            <h2>🏠 遊戲房間</h2>
+    <div id="menu">
 
-
-            <!-- 房號 -->
-
-            <div class="room-code-title">
-                房間號
-            </div>
+        <button id="createRoom">
+            🏠 建立房間
+        </button>
 
 
-            <div id="displayRoomCode">
-                ----
-            </div>
+        <div class="join-area">
+
+            <input
+                id="roomCode"
+                type="text"
+                maxlength="4"
+                inputmode="numeric"
+                autocomplete="off"
+                placeholder="輸入4碼房號"
+            >
 
 
-            <!-- 房間狀態 -->
-
-            <p id="roomStatus">
-                ⏳ 正在建立房間...
-            </p>
-
-
-            <!-- ============================ -->
-            <!-- 玩家列表 -->
-            <!-- ============================ -->
-
-            <div id="playerList">
-
-                <div id="player1">
-                    👤 玩家 1：房主
-                </div>
-
-
-                <div id="player2">
-                    ⏳ 玩家 2：等待加入...
-                </div>
-
-            </div>
-
-
-            <!-- 離開房間 -->
-
-            <button id="leaveRoom">
-                🚪 離開房間
+            <button id="joinRoom">
+                🔗 加入房間
             </button>
 
         </div>
-
-
-        <!-- ================================ -->
-        <!-- 系統訊息 -->
-        <!-- ================================ -->
-
-        <div id="message"></div>
 
     </div>
 
 
-    <!-- ================================ -->
-    <!-- JavaScript -->
-    <!-- ================================ -->
 
-    <!-- 必須先載入 room.js -->
-    <script src="room.js"></script>
+    <!-- ================================= -->
+    <!-- 房間畫面 -->
+    <!-- ================================= -->
 
-    <!-- 再載入 game.js -->
-    <script src="game.js"></script>
+    <div
+        id="roomScreen"
+        class="hidden"
+    >
+
+        <h2>
+            🏠 遊戲房間
+        </h2>
+
+
+        <div class="room-code-title">
+            房間號
+        </div>
+
+
+        <div id="displayRoomCode">
+            ----
+        </div>
+
+
+        <p id="roomStatus">
+            ⏳ 正在建立房間...
+        </p>
+
+
+
+        <!-- ================================= -->
+        <!-- 玩家列表 -->
+        <!-- ================================= -->
+
+        <div id="playerList">
+
+            <div id="player1">
+                🟢 玩家 1：房主
+            </div>
+
+
+            <div id="player2">
+                ⏳ 玩家 2：等待加入...
+            </div>
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- 開始遊戲 -->
+        <!-- ================================= -->
+
+        <button
+            id="startGame"
+            class="start-game-button"
+            disabled
+        >
+            🎮 等待玩家加入
+        </button>
+
+
+        <br>
+
+
+        <!-- ================================= -->
+        <!-- 離開房間 -->
+        <!-- ================================= -->
+
+        <button id="leaveRoom">
+            🚪 離開房間
+        </button>
+
+    </div>
+
+
+
+    <!-- ================================= -->
+    <!-- 遊戲畫面 -->
+    <!-- ================================= -->
+
+    <div
+        id="gameScreen"
+        class="hidden"
+    >
+
+        <h2>
+            🏆 遊戲開始
+        </h2>
+
+
+        <!-- 戰局 -->
+
+        <div id="roundNumber">
+            第 1 戰
+        </div>
+
+
+        <!-- ================================= -->
+        <!-- 分數 -->
+        <!-- ================================= -->
+
+        <div id="scoreBoard">
+
+            <div class="score-card">
+
+                <div>
+                    👤 玩家 1
+                </div>
+
+                <strong id="score1">
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="score-vs">
+                VS
+            </div>
+
+
+            <div class="score-card">
+
+                <div>
+                    👤 玩家 2
+                </div>
+
+                <strong id="score2">
+                    0
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- 身分 -->
+        <!-- ================================= -->
+
+        <div id="roleBox">
+
+            <div id="myRole">
+                我的身分：等待中
+            </div>
+
+
+            <div id="opponentRole">
+                對手：等待中
+            </div>
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- 挑戰類型 -->
+        <!-- ================================= -->
+
+        <div id="challengeBox">
+
+            <h3>
+                🎯 本戰挑戰
+            </h3>
+
+
+            <div id="challengeType">
+                尚未選擇
+            </div>
+
+        </div>
+
+
+
+        <!-- ================================= -->
+        <!-- 遊戲訊息 -->
+        <!-- ================================= -->
+
+        <div id="gameMessage">
+            等待遊戲開始...
+        </div>
+
+
+        <!-- ================================= -->
+        <!-- 下一戰 -->
+        <!-- ================================= -->
+
+        <button
+            id="nextRound"
+            class="start-game-button hidden"
+        >
+            ➡️ 下一戰
+        </button>
+
+
+    </div>
+
+
+
+    <!-- ================================= -->
+    <!-- 遊戲結束 -->
+    <!-- ================================= -->
+
+    <div
+        id="resultScreen"
+        class="hidden"
+    >
+
+        <h2>
+            🏆 遊戲結束
+        </h2>
+
+
+        <div id="winnerText">
+            勝利者
+        </div>
+
+
+        <div id="finalScore">
+            0 : 0
+        </div>
+
+
+        <button id="backToMenu">
+            🔄 回到主選單
+        </button>
+
+    </div>
+
+
+
+    <!-- ================================= -->
+    <!-- 系統訊息 -->
+    <!-- ================================= -->
+
+    <div id="message"></div>
+
+
+</div>
+
+
+<!-- ================================= -->
+<!-- JavaScript -->
+<!-- ================================= -->
+
+<script src="room.js"></script>
+
+<script src="game.js"></script>
+
 
 </body>
 
