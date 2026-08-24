@@ -1,109 +1,365 @@
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
+/* ========================================
+   🎮 AI Card Challenge
+   ======================================== */
 
-    background: #111;
-    color: white;
 
-    text-align: center;
+/* ========================================
+   基本設定
+   ======================================== */
+
+* {
+    box-sizing: border-box;
 }
 
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    background: #0b0e14;
+    color: #ffffff;
+
+    font-family:
+        Arial,
+        "Microsoft JhengHei",
+        sans-serif;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+
+/* ========================================
+   主容器
+   ======================================== */
 
 #app {
     width: 90%;
-    max-width: 600px;
+    max-width: 650px;
 
-    margin: 0 auto;
-    padding-top: 80px;
+    text-align: center;
+
+    padding: 70px 20px 40px;
 }
 
 
+/* ========================================
+   標題
+   ======================================== */
+
 h1 {
+    margin: 0;
+
     font-size: 42px;
+
+    letter-spacing: 2px;
 }
 
 
 .subtitle {
-    color: #aaa;
-    margin-bottom: 40px;
+    margin-top: 15px;
+    margin-bottom: 45px;
+
+    color: #9eabb5;
+
+    font-size: 18px;
+}
+
+
+/* ========================================
+   主選單
+   ======================================== */
+
+#menu {
+    width: 100%;
 }
 
 
 button {
-    padding: 14px 28px;
+    border: none;
+
+    border-radius: 10px;
+
+    padding: 13px 25px;
 
     margin: 8px;
 
-    font-size: 18px;
+    font-size: 17px;
 
-    border: none;
-    border-radius: 8px;
+    color: white;
+
+    background: #1565c0;
 
     cursor: pointer;
+
+    transition:
+        transform 0.15s,
+        opacity 0.15s;
 }
 
 
 button:hover {
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 
 
+button:active {
+    transform: scale(0.98);
+}
+
+
+button:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* 建立房間 */
+
+#createRoom {
+    background: #2e7d32;
+
+    font-size: 20px;
+
+    padding: 15px 35px;
+}
+
+
+/* ========================================
+   加入房間
+   ======================================== */
+
 .join-area {
     margin-top: 25px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    flex-wrap: wrap;
 }
 
 
 #roomCode {
-    width: 180px;
+    width: 190px;
 
     padding: 13px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    outline: none;
 
     font-size: 20px;
 
     text-align: center;
 
-    border-radius: 8px;
-    border: none;
+    letter-spacing: 5px;
 }
 
+
+#roomCode:focus {
+    box-shadow:
+        0 0 0 3px #1565c0;
+}
+
+
+/* ========================================
+   房間畫面
+   ======================================== */
 
 #roomScreen {
-    margin-top: 40px;
+    width: 100%;
+
+    background: #141b24;
+
+    border: 2px solid #1565c0;
+
+    border-radius: 15px;
+
+    padding: 30px 20px;
+
+    margin-top: 20px;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 
-.room-code-title {
-    color: #aaa;
+#roomScreen h2 {
+    margin-top: 0;
 
-    font-size: 18px;
+    font-size: 28px;
+}
+
+
+/* ========================================
+   房號
+   ======================================== */
+
+.room-code-title {
+    margin-top: 10px;
+
+    color: #9eabb5;
+
+    font-size: 17px;
 }
 
 
 #displayRoomCode {
-    font-size: 60px;
+    margin: 15px 0 20px;
+
+    font-size: 58px;
 
     font-weight: bold;
 
     letter-spacing: 12px;
 
-    margin: 20px 0;
+    color: #fdd835;
 }
 
+
+/* ========================================
+   房間狀態
+   ======================================== */
 
 #roomStatus {
-    font-size: 20px;
-
-    color: #aaa;
-}
-
-
-.hidden {
-    display: none;
-}
-
-
-#message {
-    margin-top: 30px;
+    margin: 10px 0 25px;
 
     font-size: 18px;
+
+    color: #4caf50;
+}
+
+
+/* ========================================
+   👥 玩家列表
+   ======================================== */
+
+#playerList {
+    display: block;
+
+    width: 100%;
+
+    margin: 20px auto 25px;
+}
+
+
+#playerList div {
+    display: block;
+
+    width: 100%;
+
+    padding: 15px;
+
+    margin: 10px 0;
+
+    background: #1e2933;
+
+    border: 1px solid #37474f;
+
+    border-radius: 10px;
+
+    font-size: 18px;
+
+    text-align: left;
+}
+
+
+/* ========================================
+   玩家 1
+   ======================================== */
+
+#player1 {
+    color: #81c784;
+}
+
+
+/* ========================================
+   玩家 2
+   ======================================== */
+
+#player2 {
+    color: #b0bec5;
+}
+
+
+/* ========================================
+   離開房間
+   ======================================== */
+
+#leaveRoom {
+    background: #c62828;
+
+    margin-top: 10px;
+}
+
+
+/* ========================================
+   系統訊息
+   ======================================== */
+
+#message {
+    min-height: 25px;
+
+    margin-top: 25px;
+
+    white-space: pre-line;
+
+    color: #ffca28;
+
+    font-size: 16px;
+}
+
+
+/* ========================================
+   隱藏
+   ======================================== */
+
+.hidden {
+    display: none !important;
+}
+
+
+/* ========================================
+   手機版
+   ======================================== */
+
+@media (max-width: 600px) {
+
+    #app {
+        padding-top: 40px;
+    }
+
+
+    h1 {
+        font-size: 32px;
+    }
+
+
+    .subtitle {
+        font-size: 16px;
+
+        margin-bottom: 30px;
+    }
+
+
+    #displayRoomCode {
+        font-size: 45px;
+
+        letter-spacing: 8px;
+    }
+
+
+    #roomCode {
+        width: 160px;
+    }
+
 }
