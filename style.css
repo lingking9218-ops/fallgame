@@ -1,5 +1,6 @@
 /* ========================================
    🎮 AI Card Challenge
+   style.css
    ======================================== */
 
 
@@ -12,6 +13,11 @@
 }
 
 
+html {
+    min-height: 100%;
+}
+
+
 body {
     margin: 0;
 
@@ -20,7 +26,7 @@ body {
     background:
         radial-gradient(
             circle at top,
-            #172338,
+            #172338 0%,
             #0b0e14 65%
         );
 
@@ -64,6 +70,9 @@ h1 {
     font-size: 42px;
 
     letter-spacing: 2px;
+
+    text-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.4);
 }
 
 
@@ -79,7 +88,7 @@ h1 {
 
 
 /* ========================================
-   按鈕
+   所有按鈕
    ======================================== */
 
 button {
@@ -93,7 +102,7 @@ button {
 
     font-size: 17px;
 
-    color: white;
+    color: #ffffff;
 
     background: #1565c0;
 
@@ -102,7 +111,8 @@ button {
     transition:
         transform 0.15s,
         opacity 0.15s,
-        box-shadow 0.15s;
+        box-shadow 0.15s,
+        background 0.15s;
 }
 
 
@@ -131,7 +141,7 @@ button:disabled {
 
 
 /* ========================================
-   建立房間
+   🏠 建立房間
    ======================================== */
 
 #createRoom {
@@ -143,8 +153,13 @@ button:disabled {
 }
 
 
+#createRoom:hover {
+    background: #388e3c;
+}
+
+
 /* ========================================
-   加入房間
+   🔗 加入房間區域
    ======================================== */
 
 .join-area {
@@ -176,6 +191,17 @@ button:disabled {
     text-align: center;
 
     letter-spacing: 5px;
+
+    background: #ffffff;
+
+    color: #111111;
+}
+
+
+#roomCode::placeholder {
+    color: #888888;
+
+    letter-spacing: 1px;
 }
 
 
@@ -186,13 +212,14 @@ button:disabled {
 
 
 /* ========================================
-   房間畫面
+   🏠 房間畫面
    ======================================== */
 
 #roomScreen {
     width: 100%;
 
-    background: rgba(20, 27, 36, 0.95);
+    background:
+        rgba(20, 27, 36, 0.97);
 
     border: 2px solid #1565c0;
 
@@ -251,6 +278,8 @@ button:disabled {
     font-size: 18px;
 
     color: #4caf50;
+
+    min-height: 24px;
 }
 
 
@@ -285,6 +314,17 @@ button:disabled {
     font-size: 18px;
 
     text-align: left;
+
+    transition:
+        border-color 0.2s,
+        background 0.2s;
+}
+
+
+#playerList div:hover {
+    background: #24313d;
+
+    border-color: #546e7a;
 }
 
 
@@ -299,7 +339,7 @@ button:disabled {
 
 
 /* ========================================
-   🎮 開始遊戲按鈕
+   🎮 開始遊戲
    ======================================== */
 
 .start-game-button {
@@ -308,6 +348,13 @@ button:disabled {
     font-size: 19px;
 
     padding: 14px 35px;
+
+    font-weight: bold;
+}
+
+
+.start-game-button:hover {
+    background: #8e24aa;
 }
 
 
@@ -328,6 +375,11 @@ button:disabled {
 }
 
 
+#leaveRoom:hover {
+    background: #d32f2f;
+}
+
+
 /* ========================================
    🎮 遊戲畫面
    ======================================== */
@@ -337,7 +389,8 @@ button:disabled {
 
     margin-top: 20px;
 
-    background: rgba(20, 27, 36, 0.97);
+    background:
+        rgba(20, 27, 36, 0.97);
 
     border: 2px solid #7b1fa2;
 
@@ -358,7 +411,7 @@ button:disabled {
 
 
 /* ========================================
-   戰局
+   🏆 戰局
    ======================================== */
 
 #roundNumber {
@@ -401,6 +454,9 @@ button:disabled {
     border-radius: 12px;
 
     font-size: 18px;
+
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 
@@ -460,7 +516,7 @@ button:disabled {
 
 
 /* ========================================
-   🎯 挑戰類型
+   🎯 挑戰類型區域
    ======================================== */
 
 #challengeBox {
@@ -479,9 +535,17 @@ button:disabled {
 #challengeBox h3 {
     margin-top: 0;
 
+    margin-bottom: 18px;
+
     color: #ce93d8;
+
+    font-size: 22px;
 }
 
+
+/* ========================================
+   🎯 挑戰類型顯示
+   ======================================== */
 
 #challengeType {
     padding: 15px;
@@ -491,11 +555,108 @@ button:disabled {
     border-radius: 8px;
 
     font-size: 20px;
+
+    min-height: 55px;
 }
 
 
 /* ========================================
-   遊戲訊息
+   🎮 挑戰類型按鈕
+   ======================================== */
+
+.challenge-button {
+    display: block;
+
+    width: calc(100% - 16px);
+
+    margin: 10px auto;
+
+    padding: 15px 20px;
+
+    background: #263238;
+
+    border: 1px solid #455a64;
+
+    border-radius: 10px;
+
+    color: #ffffff;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s,
+        border-color 0.15s,
+        transform 0.15s,
+        box-shadow 0.15s;
+}
+
+
+.challenge-button:hover {
+    background: #37474f;
+
+    border-color: #7e57c2;
+
+    transform: translateX(4px);
+
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.25);
+}
+
+
+.challenge-button:active {
+    transform: scale(0.98);
+}
+
+
+/* ========================================
+   🎵 挑戰類型說明
+   ======================================== */
+
+.challenge-description {
+    display: block;
+
+    margin-top: 6px;
+
+    color: #90a4ae;
+
+    font-size: 13px;
+
+    font-weight: normal;
+}
+
+
+/* ========================================
+   🎯 已選擇的挑戰
+   ======================================== */
+
+.challenge-selected {
+    padding: 18px;
+
+    background: #263238;
+
+    border: 2px solid #7e57c2;
+
+    border-radius: 10px;
+
+    font-size: 22px;
+
+    font-weight: bold;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 0 20px rgba(126, 87, 194, 0.2);
+}
+
+
+/* ========================================
+   🎮 遊戲訊息
    ======================================== */
 
 #gameMessage {
@@ -506,15 +667,22 @@ button:disabled {
     font-size: 18px;
 
     color: #ffca28;
+
+    line-height: 1.6;
 }
 
 
 /* ========================================
-   下一戰
+   ➡️ 下一戰
    ======================================== */
 
 #nextRound {
     background: #1565c0;
+}
+
+
+#nextRound:hover {
+    background: #1976d2;
 }
 
 
@@ -529,7 +697,8 @@ button:disabled {
 
     padding: 40px 20px;
 
-    background: rgba(20, 27, 36, 0.97);
+    background:
+        rgba(20, 27, 36, 0.97);
 
     border: 2px solid #fdd835;
 
@@ -572,8 +741,13 @@ button:disabled {
 }
 
 
+#backToMenu:hover {
+    background: #388e3c;
+}
+
+
 /* ========================================
-   系統訊息
+   ⚠️ 系統訊息
    ======================================== */
 
 #message {
@@ -599,7 +773,7 @@ button:disabled {
 
 
 /* ========================================
-   📱 手機版
+   📱 手機 / 平板
    ======================================== */
 
 @media (max-width: 600px) {
@@ -654,6 +828,30 @@ button:disabled {
 
     .score-vs {
         font-size: 18px;
+    }
+
+
+    #challengeBox {
+        padding: 15px;
+    }
+
+
+    .challenge-button {
+        width: 100%;
+
+        font-size: 16px;
+
+        padding: 14px;
+    }
+
+
+    #gameScreen {
+        padding: 25px 15px;
+    }
+
+
+    #roleBox {
+        padding: 15px;
     }
 
 }
