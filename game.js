@@ -1,98 +1,149 @@
-// ================================
+// ========================================
 // 🎮 AI Card Challenge
-// 房間系統 - 第 2 版
-// ================================
+// 遊戲大廳
+// ========================================
 
 
-const menu = document.getElementById("menu");
+const menu =
+    document.getElementById("menu");
 
-const roomScreen = document.getElementById("roomScreen");
+const roomScreen =
+    document.getElementById("roomScreen");
 
-const roomCodeInput = document.getElementById("roomCode");
+const roomCodeInput =
+    document.getElementById("roomCode");
 
-const displayRoomCode = document.getElementById("displayRoomCode");
+const displayRoomCode =
+    document.getElementById("displayRoomCode");
 
-const roomStatus = document.getElementById("roomStatus");
+const message =
+    document.getElementById("message");
 
-const message = document.getElementById("message");
 
-
-// ================================
+// ========================================
 // 建立房間
-// ================================
+// ========================================
 
-document.getElementById("createRoom").addEventListener("click", () => {
+document
+    .getElementById("createRoom")
+    .addEventListener("click", async () => {
 
-    const roomCode =
-        Math.floor(1000 + Math.random() * 9000).toString();
-
-    openRoom(roomCode);
-
-});
+        showMessage("⏳ 正在建立房間...");
 
 
-// ================================
+        const roomCode =
+            await createRoom();
+
+
+        if (!roomCode) {
+
+            showMessage(
+                "❌ 建立房間失敗"
+            );
+
+            return;
+
+        }
+
+
+        menu.classList.add("hidden");
+
+        roomScreen.classList.remove("hidden");
+
+
+        displayRoomCode.textContent =
+            roomCode;
+
+
+        showMessage("");
+
+    });
+
+
+// ========================================
 // 加入房間
-// ================================
+// ========================================
 
-document.getElementById("joinRoom").addEventListener("click", () => {
+document
+    .getElementById("joinRoom")
+    .addEventListener("click", async () => {
 
-    const roomCode = roomCodeInput.value.trim();
-
-    if (!/^\d{4}$/.test(roomCode)) {
-
-        showMessage("⚠️ 請輸入 4 位數房號");
-
-        return;
-    }
-
-    openRoom(roomCode);
-
-});
+        const roomCode =
+            roomCodeInput.value.trim();
 
 
-// ================================
-// 開啟房間畫面
-// ================================
+        // 檢查房號
+        if (!/^\d{4}$/.test(roomCode)) {
 
-function openRoom(roomCode) {
+            showMessage(
+                "⚠️ 請輸入 4 位數房號"
+            );
 
-    menu.classList.add("hidden");
+            return;
 
-    roomScreen.classList.remove("hidden");
-
-    displayRoomCode.textContent = roomCode;
-
-    roomStatus.textContent = "⏳ 等待對手加入...";
-
-    showMessage("");
-
-}
+        }
 
 
-// ================================
-// 顯示訊息
-// ================================
+        showMessage(
+            "⏳ 正在加入房間..."
+        );
+
+
+        const success =
+            await joinRoom(roomCode);
+
+
+        if (!success) {
+
+            showMessage(
+                "❌ 無法加入房間"
+            );
+
+            return;
+
+        }
+
+
+        menu.classList.add("hidden");
+
+        roomScreen.classList.remove("hidden");
+
+
+        displayRoomCode.textContent =
+            roomCode;
+
+
+        showMessage("");
+
+    });
+
+
+// ========================================
+// 離開房間
+// ========================================
+
+document
+    .getElementById("leaveRoom")
+    .addEventListener("click", () => {
+
+        if (peer) {
+
+            peer.destroy();
+
+        }
+
+
+        location.reload();
+
+    });
+
+
+// ========================================
+// 系統訊息
+// ========================================
 
 function showMessage(text) {
 
     message.textContent = text;
 
 }
-
-
-// ================================
-// 離開房間
-// ================================
-
-document.getElementById("leaveRoom").addEventListener("click", () => {
-
-    roomScreen.classList.add("hidden");
-
-    menu.classList.remove("hidden");
-
-    roomCodeInput.value = "";
-
-    showMessage("");
-
-});
