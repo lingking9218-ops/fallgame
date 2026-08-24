@@ -15,29 +15,29 @@ let playerConnections = [];
 
 
 // ========================================
-// 建立自己的 Peer
+// 建立 Peer
 // ========================================
 
 function createPeer() {
 
     return new Promise((resolve, reject) => {
 
-        // 產生 4 位數 ID
         const roomCode =
             Math.floor(
                 1000 + Math.random() * 9000
             ).toString();
 
+
         peer = new Peer(roomCode);
 
 
-        // PeerJS 建立完成
+        // Peer 建立完成
         peer.on("open", (id) => {
 
             myPeerId = id;
 
             console.log(
-                "PeerJS 初始化成功:",
+                "🟢 PeerJS ID:",
                 id
             );
 
@@ -46,41 +46,57 @@ function createPeer() {
         });
 
 
-        // 有玩家加入我的房間
+        // 有玩家連進來
         peer.on("connection", (connection) => {
 
             console.log(
-                "收到玩家連線:",
+                "👤 玩家嘗試加入:",
                 connection.peer
             );
 
 
-            // 最多兩人
+            // 目前只允許 2 人
             if (playerConnections.length >= 1) {
 
                 console.log(
                     "❌ 房間已滿"
                 );
 
-                connection.close();
+                connection.on("open", () => {
+
+                    connection.send({
+                        type: "ROOM_FULL"
+                    });
+
+                    connection.close();
+
+                });
 
                 return;
 
             }
 
 
+            // 成為房主
             isHost = true;
 
+
+            // 加入玩家列表
             playerConnections.push(connection);
 
+
+            // 設定連線
             setupConnection(connection);
 
 
-            // 告訴新玩家：
-            // 你是玩家 2
+            // 告訴玩家 2：
+            // 加入成功
             connection.send({
+
                 type: "ROOM_JOINED",
+
                 playerNumber: 2
+
             });
 
 
@@ -91,10 +107,13 @@ function createPeer() {
 
 
             // 告訴玩家 2：
-            // 房間目前有兩個玩家
+            // 房間目前有兩人
             connection.send({
+
                 type: "PLAYER_LIST",
+
                 players: 2
+
             });
 
         });
@@ -117,7 +136,7 @@ function createPeer() {
         peer.on("close", () => {
 
             console.log(
-                "PeerJS 已關閉"
+                "🔴 PeerJS 已關閉"
             );
 
         });
@@ -137,19 +156,20 @@ async function createRoom() {
 
         isHost = true;
 
+
         const roomCode =
             await createPeer();
 
 
         console.log(
-            "🏠 房間建立成功:",
+            "🏠 房間建立:",
             roomCode
         );
 
 
-        updateRoomStatus();
-
         updatePlayerList();
+
+        updateRoomStatus();
 
 
         return roomCode;
@@ -157,7 +177,7 @@ async function createRoom() {
     } catch (error) {
 
         console.error(
-            "建立房間失敗:",
+            "❌ 建立房間失敗:",
             error
         );
 
@@ -181,7 +201,7 @@ async function joinRoom(roomCode) {
 
 
         console.log(
-            "🔗 正在加入房間:",
+            "🔗 加入房間:",
             roomCode
         );
 
@@ -201,31 +221,47 @@ async function joinRoom(roomCode) {
 
         return new Promise((resolve) => {
 
+            let finished = false;
+
+
+            // 連線成功
             connection.on("open", () => {
 
                 console.log(
-                    "🟢 成功加入房間:",
-                    roomCode
+                    "🟢 已連線到房主"
                 );
 
 
                 updateRoomStatus();
 
 
-                resolve(true);
+                if (!finished) {
+
+                    finished = true;
+
+                    resolve(true);
+
+                }
 
             });
 
 
+            // 連線錯誤
             connection.on("error", (error) => {
 
                 console.error(
-                    "❌ 加入房間失敗:",
+                    "❌ 加入房間錯誤:",
                     error
                 );
 
 
-                resolve(false);
+                if (!finished) {
+
+                    finished = true;
+
+                    resolve(false);
+
+                }
 
             });
 
@@ -234,7 +270,7 @@ async function joinRoom(roomCode) {
     } catch (error) {
 
         console.error(
-            "加入房間失敗:",
+            "❌ 加入房間失敗:",
             error
         );
 
@@ -269,12 +305,15 @@ function setupConnection(connection) {
     connection.on("data", (data) => {
 
         console.log(
-            "📨 收到資料:",
+            "📨 收到:",
             data
         );
 
 
-        handleRoomData(data);
+        handleRoomData(
+            data,
+            connection
+        );
 
     });
 
@@ -305,7 +344,7 @@ function setupConnection(connection) {
     connection.on("error", (error) => {
 
         console.error(
-            "❌ 連線錯誤:",
+            "❌ Connection Error:",
             error
         );
 
@@ -315,7 +354,7 @@ function setupConnection(connection) {
 
 
 // ========================================
-// 傳送資料給房主
+// 傳送給房主
 // ========================================
 
 function sendToHost(data) {
@@ -328,14 +367,8 @@ function sendToHost(data) {
         hostConnection.send(data);
 
         console.log(
-            "📤 傳送給房主:",
+            "📤 傳給房主:",
             data
-        );
-
-    } else {
-
-        console.warn(
-            "⚠️ 目前沒有連線到房主"
         );
 
     }
@@ -363,11 +396,6 @@ function broadcast(data) {
 
                 connection.send(data);
 
-                console.log(
-                    "📡 廣播:",
-                    data
-                );
-
             }
 
         }
@@ -377,10 +405,13 @@ function broadcast(data) {
 
 
 // ========================================
-// 接收房間資料
+// 房間資料
 // ========================================
 
-function handleRoomData(data) {
+function handleRoomData(
+    data,
+    connection
+) {
 
     console.log(
         "📨 房間資料:",
@@ -388,8 +419,13 @@ function handleRoomData(data) {
     );
 
 
-    // 玩家加入
-    if (data.type === "ROOM_JOINED") {
+    // ====================================
+    // 玩家 2 加入
+    // ====================================
+
+    if (
+        data.type === "ROOM_JOINED"
+    ) {
 
         const player1 =
             document.getElementById(
@@ -417,23 +453,40 @@ function handleRoomData(data) {
 
         }
 
+
+        updateRoomStatus();
+
     }
 
 
+    // ====================================
     // 玩家列表
-    if (data.type === "PLAYER_LIST") {
+    // ====================================
 
-        updatePlayerList();
-
-    }
-
-
-    // 玩家離開
-    if (data.type === "PLAYER_LEFT") {
+    if (
+        data.type === "PLAYER_LIST"
+    ) {
 
         updatePlayerList();
 
         updateRoomStatus();
+
+    }
+
+
+    // ====================================
+    // 房間已滿
+    // ====================================
+
+    if (
+        data.type === "ROOM_FULL"
+    ) {
+
+        alert(
+            "❌ 房間已經有兩名玩家"
+        );
+
+        location.reload();
 
     }
 
@@ -457,21 +510,29 @@ function updatePlayerList() {
         );
 
 
-    if (!player1 || !player2) {
+    if (
+        !player1 ||
+        !player2
+    ) {
 
         return;
 
     }
 
 
+    // ====================================
     // 房主
+    // ====================================
+
     if (isHost) {
 
         player1.textContent =
             "🟢 玩家 1：房主";
 
 
-        if (playerConnections.length >= 1) {
+        if (
+            playerConnections.length >= 1
+        ) {
 
             player2.textContent =
                 "🟢 玩家 2：已加入";
@@ -486,7 +547,10 @@ function updatePlayerList() {
     }
 
 
+    // ====================================
     // 房客
+    // ====================================
+
     else {
 
         player1.textContent =
@@ -519,6 +583,7 @@ function updateRoomStatus() {
     }
 
 
+    // 房主
     if (isHost) {
 
         if (
@@ -537,6 +602,8 @@ function updateRoomStatus() {
 
     }
 
+
+    // 房客
     else {
 
         if (
