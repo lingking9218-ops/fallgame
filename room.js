@@ -1,6 +1,6 @@
 // ========================================
 // 🌐 AI Card Challenge
-// PeerJS 房間系統
+// room.js
 // ========================================
 
 let peer = null;
@@ -31,7 +31,6 @@ function createPeer() {
         peer = new Peer(roomCode);
 
 
-        // Peer 建立完成
         peer.on("open", (id) => {
 
             myPeerId = id;
@@ -46,21 +45,15 @@ function createPeer() {
         });
 
 
-        // 有玩家連進來
         peer.on("connection", (connection) => {
 
             console.log(
-                "👤 玩家嘗試加入:",
+                "👤 玩家加入:",
                 connection.peer
             );
 
 
-            // 目前只允許 2 人
             if (playerConnections.length >= 1) {
-
-                console.log(
-                    "❌ 房間已滿"
-                );
 
                 connection.on("open", () => {
 
@@ -77,49 +70,50 @@ function createPeer() {
             }
 
 
-            // 成為房主
             isHost = true;
 
 
-            // 加入玩家列表
-            playerConnections.push(connection);
+            playerConnections.push(
+                connection
+            );
 
 
-            // 設定連線
-            setupConnection(connection);
+            setupConnection(
+                connection
+            );
 
 
-            // 告訴玩家 2：
-            // 加入成功
-            connection.send({
+            connection.on("open", () => {
 
-                type: "ROOM_JOINED",
+                connection.send({
 
-                playerNumber: 2
+                    type: "ROOM_JOINED",
 
-            });
+                    playerNumber: 2
 
-
-            // 更新房主畫面
-            updatePlayerList();
-
-            updateRoomStatus();
+                });
 
 
-            // 告訴玩家 2：
-            // 房間目前有兩人
-            connection.send({
+                connection.send({
 
-                type: "PLAYER_LIST",
+                    type: "PLAYER_LIST",
 
-                players: 2
+                    players: 2
+
+                });
+
+
+                updatePlayerList();
+
+                updateRoomStatus();
+
+                updateStartButtonSafe();
 
             });
 
         });
 
 
-        // PeerJS 錯誤
         peer.on("error", (error) => {
 
             console.error(
@@ -132,11 +126,10 @@ function createPeer() {
         });
 
 
-        // Peer 關閉
         peer.on("close", () => {
 
             console.log(
-                "🔴 PeerJS 已關閉"
+                "🔴 PeerJS 關閉"
             );
 
         });
@@ -161,20 +154,18 @@ async function createRoom() {
             await createPeer();
 
 
-        console.log(
-            "🏠 房間建立:",
-            roomCode
-        );
-
-
         updatePlayerList();
 
         updateRoomStatus();
 
+        updateStartButtonSafe();
+
 
         return roomCode;
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(
             "❌ 建立房間失敗:",
@@ -196,7 +187,6 @@ async function joinRoom(roomCode) {
 
     try {
 
-        // 建立自己的 Peer
         await createPeer();
 
 
@@ -206,17 +196,20 @@ async function joinRoom(roomCode) {
         );
 
 
-        // 連線到房主
         const connection =
             peer.connect(roomCode);
 
 
-        hostConnection = connection;
+        hostConnection =
+            connection;
+
 
         isHost = false;
 
 
-        setupConnection(connection);
+        setupConnection(
+            connection
+        );
 
 
         return new Promise((resolve) => {
@@ -224,7 +217,6 @@ async function joinRoom(roomCode) {
             let finished = false;
 
 
-            // 連線成功
             connection.on("open", () => {
 
                 console.log(
@@ -233,6 +225,8 @@ async function joinRoom(roomCode) {
 
 
                 updateRoomStatus();
+
+                updateStartButtonSafe();
 
 
                 if (!finished) {
@@ -246,7 +240,6 @@ async function joinRoom(roomCode) {
             });
 
 
-            // 連線錯誤
             connection.on("error", (error) => {
 
                 console.error(
@@ -267,7 +260,9 @@ async function joinRoom(roomCode) {
 
         });
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
         console.error(
             "❌ 加入房間失敗:",
@@ -285,9 +280,10 @@ async function joinRoom(roomCode) {
 // 設定連線
 // ========================================
 
-function setupConnection(connection) {
+function setupConnection(
+    connection
+) {
 
-    // 連線成功
     connection.on("open", () => {
 
         console.log(
@@ -298,14 +294,15 @@ function setupConnection(connection) {
 
         updateRoomStatus();
 
+        updateStartButtonSafe();
+
     });
 
 
-    // 收到資料
     connection.on("data", (data) => {
 
         console.log(
-            "📨 收到:",
+            "📨 收到資料:",
             data
         );
 
@@ -318,7 +315,6 @@ function setupConnection(connection) {
     });
 
 
-    // 玩家離開
     connection.on("close", () => {
 
         console.log(
@@ -337,10 +333,11 @@ function setupConnection(connection) {
 
         updateRoomStatus();
 
+        updateStartButtonSafe();
+
     });
 
 
-    // 連線錯誤
     connection.on("error", (error) => {
 
         console.error(
@@ -354,7 +351,7 @@ function setupConnection(connection) {
 
 
 // ========================================
-// 傳送給房主
+// 傳給房主
 // ========================================
 
 function sendToHost(data) {
@@ -365,11 +362,6 @@ function sendToHost(data) {
     ) {
 
         hostConnection.send(data);
-
-        console.log(
-            "📤 傳給房主:",
-            data
-        );
 
     }
 
@@ -420,7 +412,7 @@ function handleRoomData(
 
 
     // ====================================
-    // 玩家 2 加入
+    // 玩家加入
     // ====================================
 
     if (
@@ -456,6 +448,10 @@ function handleRoomData(
 
         updateRoomStatus();
 
+        updateStartButtonSafe();
+
+        return;
+
     }
 
 
@@ -470,6 +466,10 @@ function handleRoomData(
         updatePlayerList();
 
         updateRoomStatus();
+
+        updateStartButtonSafe();
+
+        return;
 
     }
 
@@ -487,6 +487,33 @@ function handleRoomData(
         );
 
         location.reload();
+
+        return;
+
+    }
+
+
+    // ====================================
+    // 遊戲資料
+    // ====================================
+
+    if (
+        data.type === "GAME_START" ||
+        data.type === "NEXT_ROUND" ||
+        data.type === "ROUND_RESULT" ||
+        data.type === "GAME_FINISH"
+    ) {
+
+        if (
+            typeof handleGameData ===
+            "function"
+        ) {
+
+            handleGameData(data);
+
+        }
+
+        return;
 
     }
 
@@ -520,10 +547,6 @@ function updatePlayerList() {
     }
 
 
-    // ====================================
-    // 房主
-    // ====================================
-
     if (isHost) {
 
         player1.textContent =
@@ -537,7 +560,9 @@ function updatePlayerList() {
             player2.textContent =
                 "🟢 玩家 2：已加入";
 
-        } else {
+        }
+
+        else {
 
             player2.textContent =
                 "⏳ 玩家 2：等待加入...";
@@ -546,15 +571,11 @@ function updatePlayerList() {
 
     }
 
-
-    // ====================================
-    // 房客
-    // ====================================
-
     else {
 
         player1.textContent =
             "🟢 玩家 1：房主";
+
 
         player2.textContent =
             "🟢 玩家 2：我";
@@ -583,7 +604,6 @@ function updateRoomStatus() {
     }
 
 
-    // 房主
     if (isHost) {
 
         if (
@@ -593,7 +613,9 @@ function updateRoomStatus() {
             status.textContent =
                 "🟢 對手已加入！";
 
-        } else {
+        }
+
+        else {
 
             status.textContent =
                 "🏠 房主｜等待對手加入...";
@@ -602,8 +624,6 @@ function updateRoomStatus() {
 
     }
 
-
-    // 房客
     else {
 
         if (
@@ -614,7 +634,9 @@ function updateRoomStatus() {
             status.textContent =
                 "🟢 已連線到房主";
 
-        } else {
+        }
+
+        else {
 
             status.textContent =
                 "⏳ 正在連線到房主...";
@@ -622,5 +644,27 @@ function updateRoomStatus() {
         }
 
     }
+
+}
+
+
+// ========================================
+// 安全更新開始遊戲按鈕
+// ========================================
+
+function updateStartButtonSafe() {
+
+    // game.js 還沒載入時不要報錯
+    if (
+        typeof updateStartButton !==
+        "function"
+    ) {
+
+        return;
+
+    }
+
+
+    updateStartButton();
 
 }
