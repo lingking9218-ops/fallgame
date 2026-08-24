@@ -1,49 +1,7 @@
 // ========================================
 // 🎮 AI Card Challenge
 // game.js
-// 遊戲核心＋挑戰類型選擇
 // ========================================
-
-
-// ========================================
-// HTML 元素
-// ========================================
-
-const menu =
-    document.getElementById("menu");
-
-const roomScreen =
-    document.getElementById("roomScreen");
-
-const gameScreen =
-    document.getElementById("gameScreen");
-
-const resultScreen =
-    document.getElementById("resultScreen");
-
-const roomCodeInput =
-    document.getElementById("roomCode");
-
-const displayRoomCode =
-    document.getElementById("displayRoomCode");
-
-const message =
-    document.getElementById("message");
-
-const createRoomButton =
-    document.getElementById("createRoom");
-
-const joinRoomButton =
-    document.getElementById("joinRoom");
-
-const leaveRoomButton =
-    document.getElementById("leaveRoom");
-
-const startGameButton =
-    document.getElementById("startGame");
-
-const nextRoundButton =
-    document.getElementById("nextRound");
 
 
 // ========================================
@@ -51,49 +9,41 @@ const nextRoundButton =
 // ========================================
 
 const challengeTypes = [
-
     {
         id: "absolute_pitch",
         name: "🎵 絕對音感挑戰",
-        description:
-            "同時播放 3 個音，挑戰者需要聽出是哪 3 個音。"
+        description: "同時播放 3 個音，挑戰者要聽出三個音。"
     },
 
     {
         id: "rhythm",
         name: "🥁 節拍挑戰",
-        description:
-            "出題者設定節奏，挑戰者使用按鈕打出相同節奏。"
+        description: "出題者先設定節奏，挑戰者用按鈕打出相同節奏。"
     },
 
     {
         id: "taiko",
         name: "🥁 太鼓達人",
-        description:
-            "按照節奏擊打音符。"
+        description: "按照節奏擊打音符。"
     },
 
     {
         id: "hard_taiko",
         name: "⚡ 困難版太鼓",
-        description:
-            "使用上下左右四條音軌進行挑戰。"
+        description: "使用上下左右四條音軌進行挑戰。"
     },
 
     {
         id: "devil_music",
         name: "💀 魔鬼音之挑戰",
-        description:
-            "WASD＋空白鍵控制爵士鼓，RTYUIOP演奏七個音。"
+        description: "WASD＋空白鍵控制爵士鼓，RTYUIOP演奏七個音。"
     },
 
     {
         id: "sight_reading",
         name: "🎼 視譜挑戰",
-        description:
-            "使用 ASDF＋TYUIOP 進行雙手視奏。"
+        description: "使用 ASDF＋TYUIOP 進行雙手視奏。"
     }
-
 ];
 
 
@@ -102,7 +52,6 @@ const challengeTypes = [
 // ========================================
 
 let gameData = {
-
     started: false,
 
     round: 1,
@@ -113,221 +62,278 @@ let gameData = {
 
     maxRounds: 5,
 
-    currentChallenge: null,
+    currentChallenge: {
+        creator: 1,
+        challenger: 2,
+        type: null
+    },
 
     roundWinner: null,
 
     gameWinner: null
-
 };
 
 
-// ========================================
-// 我的玩家編號
-// ========================================
-
 let myPlayerNumber = 0;
-
-
-// ========================================
-// 遊戲是否開始
-// ========================================
 
 let gameStarted = false;
 
 
 // ========================================
-// 建立房間
+// 🔧 安全取得元素
 // ========================================
 
-createRoomButton.addEventListener(
-    "click",
-    async () => {
-
-        createRoomButton.disabled = true;
-
-        joinRoomButton.disabled = true;
+function $(id) {
+    return document.getElementById(id);
+}
 
 
-        showMessage(
-            "⏳ 正在建立房間..."
-        );
+// ========================================
+// 💬 訊息
+// ========================================
+
+function showMessage(text) {
+
+    const el = $("message");
+
+    if (el) {
+        el.textContent = text;
+    }
+
+}
 
 
-        const roomCode =
-            await createRoom();
+// ========================================
+// 🎮 初始化按鈕
+// ========================================
+
+const createRoomButton = $("createRoom");
+const joinRoomButton = $("joinRoom");
+const leaveRoomButton = $("leaveRoom");
+const startGameButton = $("startGame");
+const nextRoundButton = $("nextRound");
 
 
-        if (!roomCode) {
+// ========================================
+// 🏠 建立房間
+// ========================================
+
+if (createRoomButton) {
+
+    createRoomButton.addEventListener(
+        "click",
+        async () => {
+
+            createRoomButton.disabled = true;
+
+            if (joinRoomButton) {
+                joinRoomButton.disabled = true;
+            }
+
+            showMessage("⏳ 正在建立房間...");
+
+
+            const roomCode =
+                await createRoom();
+
+
+            if (!roomCode) {
+
+                showMessage(
+                    "❌ 建立房間失敗"
+                );
+
+                createRoomButton.disabled = false;
+
+                if (joinRoomButton) {
+                    joinRoomButton.disabled = false;
+                }
+
+                return;
+            }
+
+
+            myPlayerNumber = 1;
+
+
+            const menu = $("menu");
+            const roomScreen = $("roomScreen");
+            const displayRoomCode =
+                $("displayRoomCode");
+
+
+            if (menu) {
+                menu.classList.add("hidden");
+            }
+
+            if (roomScreen) {
+                roomScreen.classList.remove("hidden");
+            }
+
+            if (displayRoomCode) {
+                displayRoomCode.textContent =
+                    roomCode;
+            }
+
+
+            updateStartButton();
+
+            showMessage("");
+        }
+    );
+
+}
+
+
+// ========================================
+// 🚪 加入房間
+// ========================================
+
+if (joinRoomButton) {
+
+    joinRoomButton.addEventListener(
+        "click",
+        async () => {
+
+            const input = $("roomCode");
+
+            if (!input) {
+                return;
+            }
+
+
+            const roomCode =
+                input.value.trim();
+
+
+            if (!/^\d{4}$/.test(roomCode)) {
+
+                showMessage(
+                    "⚠️ 請輸入 4 位數房號"
+                );
+
+                return;
+            }
+
+
+            createRoomButton.disabled = true;
+            joinRoomButton.disabled = true;
+
 
             showMessage(
-                "❌ 建立房間失敗"
+                "⏳ 正在加入房間..."
             );
 
 
-            createRoomButton.disabled = false;
+            const success =
+                await joinRoom(roomCode);
 
-            joinRoomButton.disabled = false;
 
-            return;
+            if (!success) {
 
+                showMessage(
+                    "❌ 無法加入房間"
+                );
+
+                createRoomButton.disabled = false;
+                joinRoomButton.disabled = false;
+
+                return;
+            }
+
+
+            myPlayerNumber = 2;
+
+
+            const menu = $("menu");
+            const roomScreen = $("roomScreen");
+            const displayRoomCode =
+                $("displayRoomCode");
+
+
+            if (menu) {
+                menu.classList.add("hidden");
+            }
+
+            if (roomScreen) {
+                roomScreen.classList.remove("hidden");
+            }
+
+            if (displayRoomCode) {
+                displayRoomCode.textContent =
+                    roomCode;
+            }
+
+
+            updateStartButton();
+
+            showMessage("");
         }
+    );
 
-
-        myPlayerNumber = 1;
-
-
-        menu.classList.add("hidden");
-
-        roomScreen.classList.remove("hidden");
-
-
-        displayRoomCode.textContent =
-            roomCode;
-
-
-        updateStartButton();
-
-        showMessage("");
-
-    }
-);
+}
 
 
 // ========================================
-// 加入房間
+// 🚪 離開房間
 // ========================================
 
-joinRoomButton.addEventListener(
-    "click",
-    async () => {
+if (leaveRoomButton) {
 
-        const roomCode =
-            roomCodeInput.value.trim();
+    leaveRoomButton.addEventListener(
+        "click",
+        () => {
 
+            if (peer) {
+                peer.destroy();
+            }
 
-        if (!/^\d{4}$/.test(roomCode)) {
-
-            showMessage(
-                "⚠️ 請輸入 4 位數房號"
-            );
-
-            return;
-
+            location.reload();
         }
+    );
+
+}
 
 
-        createRoomButton.disabled = true;
+// ========================================
+// 🎮 開始遊戲
+// ========================================
 
-        joinRoomButton.disabled = true;
+if (startGameButton) {
 
+    startGameButton.addEventListener(
+        "click",
+        () => {
 
-        showMessage(
-            "⏳ 正在加入房間..."
-        );
-
-
-        const success =
-            await joinRoom(roomCode);
-
-
-        if (!success) {
-
-            showMessage(
-                "❌ 無法加入房間"
-            );
+            if (!isHost) {
+                return;
+            }
 
 
-            createRoomButton.disabled = false;
+            if (
+                !playerConnections ||
+                playerConnections.length < 1
+            ) {
 
-            joinRoomButton.disabled = false;
+                return;
+            }
 
-            return;
 
+            startGame();
         }
+    );
 
-
-        myPlayerNumber = 2;
-
-
-        menu.classList.add("hidden");
-
-        roomScreen.classList.remove("hidden");
-
-
-        displayRoomCode.textContent =
-            roomCode;
-
-
-        updateStartButton();
-
-        showMessage("");
-
-    }
-);
+}
 
 
 // ========================================
-// 離開房間
-// ========================================
-
-leaveRoomButton.addEventListener(
-    "click",
-    () => {
-
-        if (peer) {
-
-            peer.destroy();
-
-        }
-
-
-        location.reload();
-
-    }
-);
-
-
-// ========================================
-// 房主開始遊戲
-// ========================================
-
-startGameButton.addEventListener(
-    "click",
-    () => {
-
-        if (!isHost) {
-
-            return;
-
-        }
-
-
-        if (
-            playerConnections.length < 1
-        ) {
-
-            return;
-
-        }
-
-
-        startGame();
-
-    }
-);
-
-
-// ========================================
-// 開始遊戲
+// 🚀 開始遊戲
 // ========================================
 
 function startGame() {
 
     if (!isHost) {
-
         return;
-
     }
 
 
@@ -343,17 +349,25 @@ function startGame() {
 
         maxRounds: 5,
 
-        currentChallenge: null,
+        currentChallenge: {
+
+            creator: 1,
+
+            challenger: 2,
+
+            type: null
+        },
 
         roundWinner: null,
 
         gameWinner: null
-
     };
 
 
     gameStarted = true;
 
+
+    showGameScreen();
 
     setupRound();
 
@@ -363,139 +377,108 @@ function startGame() {
         type: "GAME_START",
 
         gameData: gameData
-
     });
-
-
-    showGameScreen();
 
 }
 
 
 // ========================================
-// 設定本戰
+// ⚔️ 設定回合
 // ========================================
 
 function setupRound() {
 
     gameData.roundWinner = null;
 
+    gameData.currentChallenge = {
 
-    // 奇數戰
-    // 玩家1 出題
-    // 玩家2 挑戰
+        creator:
+            gameData.round % 2 === 1
+                ? 1
+                : 2,
 
-    if (
-        gameData.round % 2 === 1
-    ) {
+        challenger:
+            gameData.round % 2 === 1
+                ? 2
+                : 1,
 
-        gameData.currentChallenge = {
+        type: null
+    };
 
-            creator: 1,
 
-            challenger: 2,
-
-            type: null
-
-        };
-
-    }
-
-    // 偶數戰
-    // 玩家2 出題
-    // 玩家1 挑戰
-
-    else {
-
-        gameData.currentChallenge = {
-
-            creator: 2,
-
-            challenger: 1,
-
-            type: null
-
-        };
-
-    }
-
+    showGameScreen();
 
     updateGameUI();
-
-
-    nextRoundButton.classList.add(
-        "hidden"
-    );
 
 }
 
 
 // ========================================
-// 顯示遊戲畫面
+// 🖥️ 顯示遊戲畫面
 // ========================================
 
 function showGameScreen() {
 
-    roomScreen.classList.add(
-        "hidden"
-    );
-
-    gameScreen.classList.remove(
-        "hidden"
-    );
-
-    resultScreen.classList.add(
-        "hidden"
-    );
+    const menu = $("menu");
+    const roomScreen = $("roomScreen");
+    const gameScreen = $("gameScreen");
+    const resultScreen = $("resultScreen");
 
 
-    updateGameUI();
+    if (menu) {
+        menu.classList.add("hidden");
+    }
+
+    if (roomScreen) {
+        roomScreen.classList.add("hidden");
+    }
+
+    if (gameScreen) {
+        gameScreen.classList.remove("hidden");
+    }
+
+    if (resultScreen) {
+        resultScreen.classList.add("hidden");
+    }
 
 }
 
 
 // ========================================
-// 更新遊戲畫面
+// 🖥️ 更新遊戲畫面
 // ========================================
 
 function updateGameUI() {
 
     if (!gameStarted) {
-
         return;
-
     }
 
 
-    // ====================================
-    // 戰局
-    // ====================================
+    const roundNumber = $("roundNumber");
 
-    document.getElementById(
-        "roundNumber"
-    ).textContent =
-        `第 ${gameData.round} 戰 / 5 戰`;
+    if (roundNumber) {
 
-
-    // ====================================
-    // 分數
-    // ====================================
-
-    document.getElementById(
-        "score1"
-    ).textContent =
-        gameData.score1;
+        roundNumber.textContent =
+            `第 ${gameData.round} 戰 / ${gameData.maxRounds} 戰`;
+    }
 
 
-    document.getElementById(
-        "score2"
-    ).textContent =
-        gameData.score2;
+    const score1 = $("score1");
+
+    if (score1) {
+        score1.textContent =
+            gameData.score1;
+    }
 
 
-    // ====================================
-    // 身分
-    // ====================================
+    const score2 = $("score2");
+
+    if (score2) {
+        score2.textContent =
+            gameData.score2;
+    }
+
 
     const creator =
         gameData.currentChallenge.creator;
@@ -504,154 +487,175 @@ function updateGameUI() {
         gameData.currentChallenge.challenger;
 
 
+    const myRole = $("myRole");
+
+    const opponentRole =
+        $("opponentRole");
+
+
+    if (myPlayerNumber === creator) {
+
+        if (myRole) {
+            myRole.textContent =
+                "🎨 我的身分：出題者";
+        }
+
+        if (opponentRole) {
+            opponentRole.textContent =
+                "🎯 對手：挑戰者";
+        }
+
+    } else {
+
+        if (myRole) {
+            myRole.textContent =
+                "🎯 我的身分：挑戰者";
+        }
+
+        if (opponentRole) {
+            opponentRole.textContent =
+                "🎨 對手：出題者";
+        }
+    }
+
+
+    updateChallengeArea();
+
+}
+
+
+// ========================================
+// 🎯 更新挑戰選單
+// ========================================
+
+function updateChallengeArea() {
+
+    const challengeType =
+        $("challengeType");
+
+    if (!challengeType) {
+
+        console.error(
+            "❌ 找不到 #challengeType"
+        );
+
+        return;
+    }
+
+
+    const creator =
+        gameData.currentChallenge.creator;
+
+    const selected =
+        gameData.currentChallenge.type;
+
+
+    // ------------------------------
+    // 已經選擇
+    // ------------------------------
+
+    if (selected) {
+
+        const type =
+            challengeTypes.find(
+                item => item.id === selected
+            );
+
+
+        if (!type) {
+            return;
+        }
+
+
+        challengeType.innerHTML = `
+
+            <div class="challenge-selected">
+
+                ${type.name}
+
+                <div class="challenge-description">
+
+                    ${type.description}
+
+                </div>
+
+            </div>
+
+        `;
+
+
+        updateGameMessage(
+            `🎯 本戰挑戰：${type.name}`
+        );
+
+        return;
+    }
+
+
+    // ------------------------------
+    // 出題者
+    // ------------------------------
+
     if (
         myPlayerNumber === creator
     ) {
 
-        document.getElementById(
-            "myRole"
-        ).textContent =
-            "🎨 我的身分：出題者";
+        challengeType.innerHTML = `
+
+            <div style="
+                margin-bottom:15px;
+                color:#ffca28;
+                font-size:18px;
+            ">
+
+                🎨 請選擇本戰的挑戰類型
+
+            </div>
+
+            ${createChallengeButtons()}
+
+        `;
 
 
-        document.getElementById(
-            "opponentRole"
-        ).textContent =
-            "🎯 對手：挑戰者";
-
-    }
-
-    else {
-
-        document.getElementById(
-            "myRole"
-        ).textContent =
-            "🎯 我的身分：挑戰者";
-
-
-        document.getElementById(
-            "opponentRole"
-        ).textContent =
-            "🎨 對手：出題者";
-
-    }
-
-
-    // ====================================
-    // 挑戰類型
-    // ====================================
-
-    const challengeType =
-        document.getElementById(
-            "challengeType"
+        updateGameMessage(
+            "🎨 你是出題者，請選擇挑戰類型"
         );
 
-
-    if (
-        gameData.currentChallenge.type
-    ) {
-
-        const type =
-            challengeTypes.find(
-                item =>
-                    item.id ===
-                    gameData.currentChallenge.type
-            );
-
-
-        if (type) {
-
-            challengeType.textContent =
-                type.name;
-
-        }
-
     }
+
+
+    // ------------------------------
+    // 挑戰者
+    // ------------------------------
 
     else {
 
-        if (
-            myPlayerNumber === creator
-        ) {
+        challengeType.innerHTML = `
 
-            challengeType.innerHTML =
-                createChallengeButtons();
+            <div style="
+                padding:20px;
+                color:#90a4ae;
+            ">
 
-        }
+                ⏳
 
-        else {
+                等待出題者選擇挑戰類型...
 
-            challengeType.textContent =
-                "⏳ 等待出題者選擇挑戰類型...";
+            </div>
 
-        }
-
-    }
+        `;
 
 
-    // ====================================
-    // 遊戲訊息
-    // ====================================
-
-    const gameMessage =
-        document.getElementById(
-            "gameMessage"
+        updateGameMessage(
+            "🎯 等待出題者選擇挑戰..."
         );
-
-
-    if (
-        gameData.currentChallenge.type
-    ) {
-
-        const type =
-            challengeTypes.find(
-                item =>
-                    item.id ===
-                    gameData.currentChallenge.type
-            );
-
-
-        if (myPlayerNumber === creator) {
-
-            gameMessage.textContent =
-                `🎨 你選擇了「${type.name}」`;
-
-        }
-
-        else {
-
-            gameMessage.textContent =
-                `🎯 等待出題者開始「${type.name}」`;
-
-        }
-
-    }
-
-    else {
-
-        if (
-            myPlayerNumber === creator
-        ) {
-
-            gameMessage.textContent =
-                "🎨 請選擇本戰挑戰類型";
-
-        }
-
-        else {
-
-            gameMessage.textContent =
-                "⏳ 等待出題者選擇挑戰...";
-
-        }
-
     }
 
 }
 
 
 // ========================================
-// 建立挑戰類型按鈕
+// 🔘 建立挑戰按鈕
 // ========================================
 
 function createChallengeButtons() {
@@ -665,77 +669,76 @@ function createChallengeButtons() {
             html += `
 
                 <button
+                    type="button"
                     class="challenge-button"
                     onclick="selectChallenge('${type.id}')"
                 >
 
                     ${type.name}
 
+                    <span class="challenge-description">
+
+                        ${type.description}
+
+                    </span>
+
                 </button>
 
             `;
-
         }
     );
 
 
     return html;
-
 }
 
 
 // ========================================
-// 選擇挑戰類型
+// 🎯 選擇挑戰
 // ========================================
 
 function selectChallenge(typeId) {
 
-    if (!isHost) {
-
-        // 玩家2也可能成為出題者
-        if (
-            !gameData.currentChallenge ||
-            gameData.currentChallenge.creator !==
-            myPlayerNumber
-        ) {
-
-            return;
-
-        }
-
-    }
+    const creator =
+        gameData.currentChallenge.creator;
 
 
+    // 不是出題者
     if (
-        gameData.currentChallenge.creator !==
-        myPlayerNumber
+        myPlayerNumber !== creator
     ) {
 
-        return;
+        console.log(
+            "❌ 你不是本戰出題者"
+        );
 
+        return;
     }
 
 
+    // 已經選過
     if (
         gameData.currentChallenge.type
     ) {
 
         return;
-
     }
 
 
-    const selected =
+    const type =
         challengeTypes.find(
-            type =>
-                type.id === typeId
+            item => item.id === typeId
         );
 
 
-    if (!selected) {
+    if (!type) {
+
+        console.error(
+            "❌ 找不到挑戰類型:",
+            typeId
+        );
 
         return;
-
     }
 
 
@@ -743,11 +746,20 @@ function selectChallenge(typeId) {
         typeId;
 
 
+    console.log(
+        "🎯 選擇挑戰:",
+        type.name
+    );
+
+
     // ====================================
-    // 房主直接廣播
+    // 房主
     // ====================================
 
     if (isHost) {
+
+        updateGameUI();
+
 
         broadcast({
 
@@ -758,15 +770,12 @@ function selectChallenge(typeId) {
         });
 
 
-        updateGameUI();
-
         return;
-
     }
 
 
     // ====================================
-    // 玩家2是出題者
+    // 玩家2
     // ====================================
 
     sendToHost({
@@ -784,37 +793,16 @@ function selectChallenge(typeId) {
 
 
 // ========================================
-// 接收挑戰類型
+// 📨 接收挑戰選擇
 // ========================================
 
-function receiveChallengeSelection(
-    data
-) {
+function receiveChallengeSelection(data) {
 
-    if (!isHost) {
-
-        gameData =
-            data.gameData;
-
-        updateGameUI();
-
-        return;
-
-    }
-
-
-    // 房主收到玩家2選擇
     gameData =
         data.gameData;
 
 
-    broadcast({
-
-        type: "CHALLENGE_SELECTED",
-
-        gameData: gameData
-
-    });
+    gameStarted = true;
 
 
     updateGameUI();
@@ -823,71 +811,111 @@ function receiveChallengeSelection(
 
 
 // ========================================
-// 下一戰
+// 📨 接收遊戲資料
 // ========================================
 
-nextRoundButton.addEventListener(
-    "click",
-    () => {
+function handleGameData(data) {
 
-        if (!isHost) {
-
-            return;
-
-        }
+    console.log(
+        "🎮 遊戲資料:",
+        data
+    );
 
 
-        if (
-            gameData.roundWinner === null
-        ) {
+    if (
+        data.type === "GAME_START"
+    ) {
 
-            return;
+        gameData =
+            data.gameData;
 
-        }
+        gameStarted = true;
 
+        showGameScreen();
 
-        if (
-            gameData.score1 >= 3 ||
-            gameData.score2 >= 3
-        ) {
-
-            finishGame();
-
-            return;
-
-        }
-
-
-        gameData.round++;
-
-
-        setupRound();
-
-
-        broadcast({
-
-            type: "NEXT_ROUND",
-
-            gameData: gameData
-
-        });
-
-    }
-);
-
-
-// ========================================
-// 測試用：判定本戰勝者
-// ========================================
-
-function testRoundWinner(
-    playerNumber
-) {
-
-    if (!isHost) {
+        updateGameUI();
 
         return;
+    }
 
+
+    if (
+        data.type === "CHALLENGE_SELECTED"
+    ) {
+
+        receiveChallengeSelection(
+            data
+        );
+
+        return;
+    }
+
+
+    if (
+        data.type === "NEXT_ROUND"
+    ) {
+
+        gameData =
+            data.gameData;
+
+        gameStarted = true;
+
+        updateGameUI();
+
+        return;
+    }
+
+
+    if (
+        data.type === "ROUND_RESULT"
+    ) {
+
+        gameData =
+            data.gameData;
+
+        updateGameUI();
+
+        return;
+    }
+
+
+    if (
+        data.type === "GAME_FINISH"
+    ) {
+
+        gameData =
+            data.gameData;
+
+        showResult();
+
+        return;
+    }
+
+}
+
+
+// ========================================
+// 📨 房間系統收到資料
+// ========================================
+
+if (
+    typeof window !== "undefined"
+) {
+
+    window.handleGameData =
+        handleGameData;
+
+}
+
+
+// ========================================
+// 🏆 測試回合結果
+// ========================================
+
+function testRoundWinner(playerNumber) {
+
+    if (!isHost) {
+        return;
     }
 
 
@@ -896,7 +924,6 @@ function testRoundWinner(
     ) {
 
         return;
-
     }
 
 
@@ -908,9 +935,7 @@ function testRoundWinner(
 
         gameData.score1++;
 
-    }
-
-    else {
+    } else {
 
         gameData.score2++;
 
@@ -922,7 +947,6 @@ function testRoundWinner(
         type: "ROUND_RESULT",
 
         gameData: gameData
-
     });
 
 
@@ -934,33 +958,83 @@ function testRoundWinner(
         gameData.score2 >= 3
     ) {
 
-        setTimeout(
-            finishGame,
-            1000
-        );
+        finishGame();
 
         return;
-
     }
 
 
-    nextRoundButton.classList.remove(
-        "hidden"
+    if (nextRoundButton) {
+
+        nextRoundButton.classList.remove(
+            "hidden"
+        );
+    }
+
+}
+
+
+// ========================================
+// ➡️ 下一戰
+// ========================================
+
+if (nextRoundButton) {
+
+    nextRoundButton.addEventListener(
+        "click",
+        () => {
+
+            if (!isHost) {
+                return;
+            }
+
+
+            if (
+                gameData.roundWinner === null
+            ) {
+
+                return;
+            }
+
+
+            if (
+                gameData.score1 >= 3 ||
+                gameData.score2 >= 3
+            ) {
+
+                finishGame();
+
+                return;
+            }
+
+
+            gameData.round++;
+
+
+            setupRound();
+
+
+            broadcast({
+
+                type: "NEXT_ROUND",
+
+                gameData: gameData
+            });
+
+        }
     );
 
 }
 
 
 // ========================================
-// 結束遊戲
+// 🏆 結束遊戲
 // ========================================
 
 function finishGame() {
 
     if (!isHost) {
-
         return;
-
     }
 
 
@@ -983,7 +1057,6 @@ function finishGame() {
     else {
 
         return;
-
     }
 
 
@@ -992,7 +1065,6 @@ function finishGame() {
         type: "GAME_FINISH",
 
         gameData: gameData
-
     });
 
 
@@ -1002,123 +1074,64 @@ function finishGame() {
 
 
 // ========================================
-// 顯示結果
+// 🏆 顯示結果
 // ========================================
 
 function showResult() {
 
-    gameScreen.classList.add(
-        "hidden"
-    );
+    const gameScreen =
+        $("gameScreen");
 
-    resultScreen.classList.remove(
-        "hidden"
-    );
+    const resultScreen =
+        $("resultScreen");
 
 
-    document.getElementById(
-        "winnerText"
-    ).textContent =
-        `🏆 玩家 ${gameData.gameWinner} 勝利！`;
-
-
-    document.getElementById(
-        "finalScore"
-    ).textContent =
-        `${gameData.score1} : ${gameData.score2}`;
-
-}
-
-
-// ========================================
-// 接收遊戲資料
-// ========================================
-
-function handleGameData(data) {
-
-    if (
-        data.type === "GAME_START"
-    ) {
-
-        gameData =
-            data.gameData;
-
-        gameStarted = true;
-
-        showGameScreen();
-
-        return;
-
-    }
-
-
-    if (
-        data.type === "CHALLENGE_SELECTED"
-    ) {
-
-        receiveChallengeSelection(
-            data
+    if (gameScreen) {
+        gameScreen.classList.add(
+            "hidden"
         );
-
-        return;
-
     }
 
 
-    if (
-        data.type === "NEXT_ROUND"
-    ) {
+    if (resultScreen) {
 
-        gameData =
-            data.gameData;
-
-        updateGameUI();
-
-        return;
-
+        resultScreen.classList.remove(
+            "hidden"
+        );
     }
 
 
-    if (
-        data.type === "ROUND_RESULT"
-    ) {
+    const winnerText =
+        $("winnerText");
 
-        gameData =
-            data.gameData;
+    const finalScore =
+        $("finalScore");
 
-        updateGameUI();
 
-        return;
+    if (winnerText) {
 
+        winnerText.textContent =
+            `🏆 玩家 ${gameData.gameWinner} 勝利！`;
     }
 
 
-    if (
-        data.type === "GAME_FINISH"
-    ) {
+    if (finalScore) {
 
-        gameData =
-            data.gameData;
-
-        showResult();
-
-        return;
-
+        finalScore.textContent =
+            `${gameData.score1} : ${gameData.score2}`;
     }
 
 }
 
 
 // ========================================
-// 更新開始遊戲按鈕
+// 🎮 更新開始遊戲按鈕
 // ========================================
 
 function updateStartButton() {
 
     if (!startGameButton) {
-
         return;
-
     }
 
 
@@ -1131,7 +1144,6 @@ function updateStartButton() {
             "⏳ 等待房主開始";
 
         return;
-
     }
 
 
@@ -1147,7 +1159,6 @@ function updateStartButton() {
             "🎮 等待玩家加入";
 
         return;
-
     }
 
 
@@ -1156,24 +1167,18 @@ function updateStartButton() {
 
     startGameButton.textContent =
         "🎮 開始遊戲";
-
 }
 
 
 // ========================================
-// 系統訊息
+// 🧪 除錯資訊
 // ========================================
 
-function showMessage(text) {
+console.log(
+    "🎮 AI Card Challenge game.js 已載入"
+);
 
-    if (!message) {
-
-        return;
-
-    }
-
-
-    message.textContent =
-        text;
-
-}
+console.log(
+    "🎯 挑戰類型數量:",
+    challengeTypes.length
+);
