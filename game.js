@@ -1,34 +1,98 @@
 // ================================
 // 🎮 AI Card Challenge
-// 房間系統 - 第 1 版
+// 房間系統 - 第 2 版
 // ================================
 
+
+const menu = document.getElementById("menu");
+
+const roomScreen = document.getElementById("roomScreen");
+
+const roomCodeInput = document.getElementById("roomCode");
+
+const displayRoomCode = document.getElementById("displayRoomCode");
+
+const roomStatus = document.getElementById("roomStatus");
+
+const message = document.getElementById("message");
+
+
+// ================================
 // 建立房間
+// ================================
+
 document.getElementById("createRoom").addEventListener("click", () => {
 
-    // 產生 1000～9999 的四位數房號
-    const roomCode = Math.floor(1000 + Math.random() * 9000);
+    const roomCode =
+        Math.floor(1000 + Math.random() * 9000).toString();
 
-    // 顯示房號
-    alert("房間建立成功！\n房號：" + roomCode);
+    openRoom(roomCode);
+
 });
 
 
+// ================================
 // 加入房間
+// ================================
+
 document.getElementById("joinRoom").addEventListener("click", () => {
 
-    // 找到輸入框
-    const roomInput = document.getElementById("roomCode");
+    const roomCode = roomCodeInput.value.trim();
 
-    // 取得玩家輸入
-    const roomCode = roomInput.value.trim();
-
-    // 檢查是不是 4 位數
     if (!/^\d{4}$/.test(roomCode)) {
-        alert("請輸入 4 位數房號！");
+
+        showMessage("⚠️ 請輸入 4 位數房號");
+
         return;
     }
 
-    // 暫時顯示成功
-    alert("正在加入房間：" + roomCode);
+    openRoom(roomCode);
+
+});
+
+
+// ================================
+// 開啟房間畫面
+// ================================
+
+function openRoom(roomCode) {
+
+    menu.classList.add("hidden");
+
+    roomScreen.classList.remove("hidden");
+
+    displayRoomCode.textContent = roomCode;
+
+    roomStatus.textContent = "⏳ 等待對手加入...";
+
+    showMessage("");
+
+}
+
+
+// ================================
+// 顯示訊息
+// ================================
+
+function showMessage(text) {
+
+    message.textContent = text;
+
+}
+
+
+// ================================
+// 離開房間
+// ================================
+
+document.getElementById("leaveRoom").addEventListener("click", () => {
+
+    roomScreen.classList.add("hidden");
+
+    menu.classList.remove("hidden");
+
+    roomCodeInput.value = "";
+
+    showMessage("");
+
 });
