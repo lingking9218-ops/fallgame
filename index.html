@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>AI Card Challenge</title>
 
+    <!-- PeerJS -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <!-- 遊戲樣式 -->
     <link rel="stylesheet" href="style.css">
 </head>
+
 
 <body>
 
     <div id="app">
+
+        <!-- ================================= -->
+        <!-- 遊戲標題 -->
+        <!-- ================================= -->
 
         <h1>🎮 AI Card Challenge</h1>
 
@@ -19,12 +33,21 @@
             玩家創造挑戰，玩家挑戰遊戲
         </p>
 
+
+        <!-- ================================= -->
         <!-- 主選單 -->
+        <!-- ================================= -->
+
         <div id="menu">
 
+            <!-- 建立房間 -->
+
             <button id="createRoom">
-                建立房間
+                🏠 建立房間
             </button>
+
+
+            <!-- 加入房間 -->
 
             <div class="join-area">
 
@@ -33,11 +56,12 @@
                     type="text"
                     maxlength="4"
                     inputmode="numeric"
+                    autocomplete="off"
                     placeholder="輸入4碼房號"
                 >
 
                 <button id="joinRoom">
-                    加入房間
+                    🔗 加入房間
                 </button>
 
             </div>
@@ -45,36 +69,59 @@
         </div>
 
 
+        <!-- ================================= -->
         <!-- 房間畫面 -->
-        <div id="roomScreen" class="hidden">
+        <!-- ================================= -->
 
-            <h2>🏠 房間</h2>
+        <div
+            id="roomScreen"
+            class="hidden"
+        >
+
+            <h2>🏠 遊戲房間</h2>
+
 
             <div class="room-code-title">
                 房間號
             </div>
 
+
             <div id="displayRoomCode">
                 ----
             </div>
 
+
             <p id="roomStatus">
-                等待對手加入...
+                ⏳ 正在建立房間...
             </p>
 
+
             <button id="leaveRoom">
-                離開房間
+                🚪 離開房間
             </button>
 
         </div>
 
 
-        <!-- 訊息 -->
+        <!-- ================================= -->
+        <!-- 系統訊息 -->
+        <!-- ================================= -->
+
         <div id="message"></div>
 
     </div>
 
+
+    <!-- ================================= -->
+    <!-- JavaScript -->
+    <!-- ================================= -->
+
+    <!-- 必須先載入 room.js -->
+    <script src="room.js"></script>
+
+    <!-- 再載入 game.js -->
     <script src="game.js"></script>
 
 </body>
+
 </html>
