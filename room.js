@@ -1,392 +1,522 @@
 // ========================================
-// 🌐 AI Card Challenge
+// 🏠 AI Card Challenge
 // room.js
+// PeerJS 房間與玩家同步
 // ========================================
 
 let peer = null;
 
 let isHost = false;
 
-let myPeerId = "";
+let myPlayerNumber = 0;
 
-let hostConnection = null;
+let currentRoomCode = "";
 
 let playerConnections = [];
 
 
 // ========================================
-// 建立 Peer
+// 🔧 產生 4 碼房號
 // ========================================
 
-function createPeer() {
+function generateRoomCode() {
 
-    return new Promise((resolve, reject) => {
-
-        const roomCode =
-            Math.floor(
-                1000 + Math.random() * 9000
-            ).toString();
-
-
-        peer = new Peer(roomCode);
-
-
-        peer.on("open", (id) => {
-
-            myPeerId = id;
-
-            console.log(
-                "🟢 PeerJS ID:",
-                id
-            );
-
-            resolve(id);
-
-        });
-
-
-        peer.on("connection", (connection) => {
-
-            console.log(
-                "👤 玩家加入:",
-                connection.peer
-            );
-
-
-            if (playerConnections.length >= 1) {
-
-                connection.on("open", () => {
-
-                    connection.send({
-                        type: "ROOM_FULL"
-                    });
-
-                    connection.close();
-
-                });
-
-                return;
-
-            }
-
-
-            isHost = true;
-
-
-            playerConnections.push(
-                connection
-            );
-
-
-            setupConnection(
-                connection
-            );
-
-
-            connection.on("open", () => {
-
-                connection.send({
-
-                    type: "ROOM_JOINED",
-
-                    playerNumber: 2
-
-                });
-
-
-                connection.send({
-
-                    type: "PLAYER_LIST",
-
-                    players: 2
-
-                });
-
-
-                updatePlayerList();
-
-                updateRoomStatus();
-
-                updateStartButtonSafe();
-
-            });
-
-        });
-
-
-        peer.on("error", (error) => {
-
-            console.error(
-                "❌ PeerJS 錯誤:",
-                error
-            );
-
-            reject(error);
-
-        });
-
-
-        peer.on("close", () => {
-
-            console.log(
-                "🔴 PeerJS 關閉"
-            );
-
-        });
-
-    });
+    return Math.floor(
+        1000 + Math.random() * 9000
+    ).toString();
 
 }
 
 
 // ========================================
-// 建立房間
+// 📨 顯示訊息
+// ========================================
+
+function roomMessage(text) {
+
+    const el =
+        document.getElementById("message");
+
+    if (el) {
+        el.textContent = text;
+    }
+
+}
+
+
+// ========================================
+// 👥 更新玩家列表
+// ========================================
+
+function updatePlayerList() {
+
+    const playerList =
+        document.getElementById("playerList");
+
+    if (!playerList) {
+        return;
+    }
+
+
+    playerList.innerHTML = "";
+
+
+    // 玩家 1
+    const player1 =
+        document.createElement("div");
+
+    player1.id = "player1";
+
+    player1.textContent =
+        "👤 玩家 1：房主";
+
+    playerList.appendChild(player1);
+
+
+    // 玩家 2
+    const player2 =
+        document.createElement("div");
+
+    player2.id = "player2";
+
+
+    if (
+        playerConnections.length >= 1
+    ) {
+
+        player2.textContent =
+            "👤 玩家 2：已加入";
+
+        player2.style.color =
+            "#81c784";
+
+    } else {
+
+        player2.textContent =
+            "👤 玩家 2：等待加入...";
+
+    }
+
+
+    playerList.appendChild(player2);
+
+}
+
+
+// ========================================
+// 🏠 建立房間
 // ========================================
 
 async function createRoom() {
 
-    try {
+    return new Promise(
+        (resolve) => {
 
-        isHost = true;
+            isHost = true;
 
-
-        const roomCode =
-            await createPeer();
-
-
-        updatePlayerList();
-
-        updateRoomStatus();
-
-        updateStartButtonSafe();
+            myPlayerNumber = 1;
 
 
-        return roomCode;
+            currentRoomCode =
+                generateRoomCode();
 
-    }
 
-    catch (error) {
+            peer = new Peer(
+                "AI_CARD_" + currentRoomCode
+            );
 
-        console.error(
-            "❌ 建立房間失敗:",
-            error
-        );
 
-        return null;
+            peer.on(
+                "open",
+                (id) => {
 
-    }
+                    console.log(
+                        "🏠 房間建立成功:",
+                        currentRoomCode
+                    );
+
+
+                    roomMessage(
+                        ""
+                    );
+
+
+                    updatePlayerList();
+
+
+                    resolve(
+                        currentRoomCode
+                    );
+
+                }
+            );
+
+
+            peer.on(
+                "connection",
+                (connection) => {
+
+                    console.log(
+                        "👤 玩家加入:",
+                        connection.peer
+                    );
+
+
+                    // 避免重複加入
+                    if (
+                        playerConnections.includes(
+                            connection
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    playerConnections.push(
+                        connection
+                    );
+
+
+                    connection.on(
+                        "open",
+                        () => {
+
+                            console.log(
+                                "🔗 玩家連線成功"
+                            );
+
+
+                            updatePlayerList();
+
+
+                            // 告訴玩家2已成功加入
+                            connection.send({
+
+                                type:
+                                    "ROOM_JOINED",
+
+                                playerNumber:
+                                    2
+
+                            });
+
+
+                            // 如果遊戲已經開始
+                            // 新連線者直接收到目前遊戲狀態
+
+                            if (
+                                typeof gameData !==
+                                "undefined" &&
+                                gameData.started
+                            ) {
+
+                                connection.send({
+
+                                    type:
+                                        "GAME_STATE",
+
+                                    gameData:
+                                        gameData
+
+                                });
+
+                            }
+
+                        }
+                    );
+
+
+                    connection.on(
+                        "data",
+                        (data) => {
+
+                            console.log(
+                                "📨 房主收到:",
+                                data
+                            );
+
+
+                            // --------------------
+                            // 玩家2送來的遊戲資料
+                            // --------------------
+
+                            if (
+                                data &&
+                                data.type ===
+                                "CHALLENGE_SELECTED"
+                            ) {
+
+                                handleGameData(
+                                    data
+                                );
+
+                                // 再同步給其他玩家
+                                broadcast(
+                                    data
+                                );
+
+                                return;
+                            }
+
+
+                            // --------------------
+                            // 其他遊戲資料
+                            // --------------------
+
+                            if (
+                                typeof handleGameData ===
+                                "function"
+                            ) {
+
+                                handleGameData(
+                                    data
+                                );
+
+                            }
+
+                        }
+                    );
+
+
+                    connection.on(
+                        "close",
+                        () => {
+
+                            console.log(
+                                "❌ 玩家離開房間"
+                            );
+
+
+                            const index =
+                                playerConnections.indexOf(
+                                    connection
+                                );
+
+
+                            if (
+                                index !== -1
+                            ) {
+
+                                playerConnections.splice(
+                                    index,
+                                    1
+                                );
+
+                            }
+
+
+                            updatePlayerList();
+
+                        }
+                    );
+
+                }
+            );
+
+
+            peer.on(
+                "error",
+                (error) => {
+
+                    console.error(
+                        "PeerJS 錯誤:",
+                        error
+                    );
+
+
+                    roomMessage(
+                        "❌ 房間建立失敗：" +
+                        error.type
+                    );
+
+
+                    resolve(null);
+
+                }
+            );
+
+        }
+    );
 
 }
 
 
 // ========================================
-// 加入房間
+// 🚪 加入房間
 // ========================================
 
 async function joinRoom(roomCode) {
 
-    try {
+    return new Promise(
+        (resolve) => {
 
-        await createPeer();
+            isHost = false;
 
+            myPlayerNumber = 2;
 
-        console.log(
-            "🔗 加入房間:",
-            roomCode
-        );
-
-
-        const connection =
-            peer.connect(roomCode);
+            currentRoomCode =
+                roomCode;
 
 
-        hostConnection =
-            connection;
+            peer = new Peer();
 
 
-        isHost = false;
+            peer.on(
+                "open",
+                () => {
+
+                    console.log(
+                        "🔗 正在連線房間:",
+                        roomCode
+                    );
 
 
-        setupConnection(
-            connection
-        );
+                    const connection =
+                        peer.connect(
+                            "AI_CARD_" +
+                            roomCode
+                        );
 
 
-        return new Promise((resolve) => {
+                    connection.on(
+                        "open",
+                        () => {
 
-            let finished = false;
-
-
-            connection.on("open", () => {
-
-                console.log(
-                    "🟢 已連線到房主"
-                );
+                            console.log(
+                                "✅ 加入房間成功"
+                            );
 
 
-                updateRoomStatus();
+                            playerConnections = [
+                                connection
+                            ];
 
-                updateStartButtonSafe();
+
+                            // 收到房主訊息
+                            connection.on(
+                                "data",
+                                (data) => {
+
+                                    console.log(
+                                        "📨 玩家2收到:",
+                                        data
+                                    );
 
 
-                if (!finished) {
+                                    // ----------------
+                                    // 房間同步
+                                    // ----------------
 
-                    finished = true;
+                                    if (
+                                        data.type ===
+                                        "ROOM_JOINED"
+                                    ) {
 
-                    resolve(true);
+                                        updatePlayerList();
+
+                                        resolve(
+                                            true
+                                        );
+
+                                        return;
+                                    }
+
+
+                                    // ----------------
+                                    // 遊戲資料
+                                    // ----------------
+
+                                    if (
+                                        typeof handleGameData ===
+                                        "function"
+                                    ) {
+
+                                        handleGameData(
+                                            data
+                                        );
+
+                                    }
+
+                                }
+                            );
+
+
+                            // 通知房主
+                            connection.send({
+
+                                type:
+                                    "PLAYER_JOINED"
+
+                            });
+
+                        }
+                    );
+
+
+                    connection.on(
+                        "error",
+                        (error) => {
+
+                            console.error(
+                                "加入失敗:",
+                                error
+                            );
+
+
+                            resolve(false);
+
+                        }
+                    );
 
                 }
-
-            });
-
-
-            connection.on("error", (error) => {
-
-                console.error(
-                    "❌ 加入房間錯誤:",
-                    error
-                );
+            );
 
 
-                if (!finished) {
+            peer.on(
+                "error",
+                (error) => {
 
-                    finished = true;
+                    console.error(
+                        "PeerJS 錯誤:",
+                        error
+                    );
+
 
                     resolve(false);
 
                 }
-
-            });
-
-        });
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "❌ 加入房間失敗:",
-            error
-        );
-
-        return false;
-
-    }
-
-}
-
-
-// ========================================
-// 設定連線
-// ========================================
-
-function setupConnection(
-    connection
-) {
-
-    connection.on("open", () => {
-
-        console.log(
-            "🔗 連線建立:",
-            connection.peer
-        );
-
-
-        updateRoomStatus();
-
-        updateStartButtonSafe();
-
-    });
-
-
-    connection.on("data", (data) => {
-
-        console.log(
-            "📨 收到資料:",
-            data
-        );
-
-
-        handleRoomData(
-            data,
-            connection
-        );
-
-    });
-
-
-    connection.on("close", () => {
-
-        console.log(
-            "🚪 玩家離開:",
-            connection.peer
-        );
-
-
-        playerConnections =
-            playerConnections.filter(
-                c => c !== connection
             );
 
-
-        updatePlayerList();
-
-        updateRoomStatus();
-
-        updateStartButtonSafe();
-
-    });
-
-
-    connection.on("error", (error) => {
-
-        console.error(
-            "❌ Connection Error:",
-            error
-        );
-
-    });
+        }
+    );
 
 }
 
 
 // ========================================
-// 傳給房主
-// ========================================
-
-function sendToHost(data) {
-
-    if (
-        hostConnection &&
-        hostConnection.open
-    ) {
-
-        hostConnection.send(data);
-
-    }
-
-}
-
-
-// ========================================
-// 房主廣播
+// 📡 廣播給玩家2
 // ========================================
 
 function broadcast(data) {
 
     if (!isHost) {
-
         return;
-
     }
 
 
     playerConnections.forEach(
-        connection => {
+        (connection) => {
 
-            if (connection.open) {
+            if (
+                connection &&
+                connection.open
+            ) {
 
-                connection.send(data);
+                connection.send(
+                    data
+                );
 
             }
 
@@ -397,274 +527,58 @@ function broadcast(data) {
 
 
 // ========================================
-// 房間資料
+// 📤 玩家2傳給房主
 // ========================================
 
-function handleRoomData(
-    data,
-    connection
-) {
-
-    console.log(
-        "📨 房間資料:",
-        data
-    );
-
-
-    // ====================================
-    // 玩家加入
-    // ====================================
-
-    if (
-        data.type === "ROOM_JOINED"
-    ) {
-
-        const player1 =
-            document.getElementById(
-                "player1"
-            );
-
-        const player2 =
-            document.getElementById(
-                "player2"
-            );
-
-
-        if (player1) {
-
-            player1.textContent =
-                "🟢 玩家 1：房主";
-
-        }
-
-
-        if (player2) {
-
-            player2.textContent =
-                "🟢 玩家 2：我";
-
-        }
-
-
-        updateRoomStatus();
-
-        updateStartButtonSafe();
-
-        return;
-
-    }
-
-
-    // ====================================
-    // 玩家列表
-    // ====================================
-
-    if (
-        data.type === "PLAYER_LIST"
-    ) {
-
-        updatePlayerList();
-
-        updateRoomStatus();
-
-        updateStartButtonSafe();
-
-        return;
-
-    }
-
-
-    // ====================================
-    // 房間已滿
-    // ====================================
-
-    if (
-        data.type === "ROOM_FULL"
-    ) {
-
-        alert(
-            "❌ 房間已經有兩名玩家"
-        );
-
-        location.reload();
-
-        return;
-
-    }
-
-
-    // ====================================
-    // 遊戲資料
-    // ====================================
-
-    if (
-        data.type === "GAME_START" ||
-        data.type === "NEXT_ROUND" ||
-        data.type === "ROUND_RESULT" ||
-        data.type === "GAME_FINISH"
-    ) {
-
-        if (
-            typeof handleGameData ===
-            "function"
-        ) {
-
-            handleGameData(data);
-
-        }
-
-        return;
-
-    }
-
-}
-
-
-// ========================================
-// 更新玩家列表
-// ========================================
-
-function updatePlayerList() {
-
-    const player1 =
-        document.getElementById(
-            "player1"
-        );
-
-    const player2 =
-        document.getElementById(
-            "player2"
-        );
-
-
-    if (
-        !player1 ||
-        !player2
-    ) {
-
-        return;
-
-    }
-
+function sendToHost(data) {
 
     if (isHost) {
-
-        player1.textContent =
-            "🟢 玩家 1：房主";
-
-
-        if (
-            playerConnections.length >= 1
-        ) {
-
-            player2.textContent =
-                "🟢 玩家 2：已加入";
-
-        }
-
-        else {
-
-            player2.textContent =
-                "⏳ 玩家 2：等待加入...";
-
-        }
-
-    }
-
-    else {
-
-        player1.textContent =
-            "🟢 玩家 1：房主";
-
-
-        player2.textContent =
-            "🟢 玩家 2：我";
-
-    }
-
-}
-
-
-// ========================================
-// 更新房間狀態
-// ========================================
-
-function updateRoomStatus() {
-
-    const status =
-        document.getElementById(
-            "roomStatus"
-        );
-
-
-    if (!status) {
-
         return;
-
     }
 
 
-    if (isHost) {
-
-        if (
-            playerConnections.length >= 1
-        ) {
-
-            status.textContent =
-                "🟢 對手已加入！";
-
-        }
-
-        else {
-
-            status.textContent =
-                "🏠 房主｜等待對手加入...";
-
-        }
-
-    }
-
-    else {
-
-        if (
-            hostConnection &&
-            hostConnection.open
-        ) {
-
-            status.textContent =
-                "🟢 已連線到房主";
-
-        }
-
-        else {
-
-            status.textContent =
-                "⏳ 正在連線到房主...";
-
-        }
-
-    }
-
-}
-
-
-// ========================================
-// 安全更新開始遊戲按鈕
-// ========================================
-
-function updateStartButtonSafe() {
-
-    // game.js 還沒載入時不要報錯
     if (
-        typeof updateStartButton !==
-        "function"
+        playerConnections.length === 0
     ) {
 
+        console.error(
+            "❌ 尚未連線房主"
+        );
+
         return;
 
     }
 
 
-    updateStartButton();
+    const connection =
+        playerConnections[0];
+
+
+    if (
+        connection &&
+        connection.open
+    ) {
+
+        connection.send(
+            data
+        );
+
+    }
 
 }
+
+
+// ========================================
+// 🔄 玩家列表初始化
+// ========================================
+
+updatePlayerList();
+
+
+// ========================================
+// 🧪 除錯
+// ========================================
+
+console.log(
+    "🏠 room.js 已載入"
+);
