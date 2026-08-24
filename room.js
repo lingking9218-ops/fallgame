@@ -1,6 +1,6 @@
 // ========================================
 // 🌐 AI Card Challenge
-// 房間 / PeerJS 系統
+// PeerJS 房間系統
 // ========================================
 
 let peer = null;
@@ -15,49 +15,64 @@ let playerConnections = [];
 
 
 // ========================================
-// 初始化 PeerJS
+// 建立自己的 Peer
 // ========================================
 
-function initPeer() {
+function createPeer() {
 
-    // 產生 4 位數房號
-    const roomCode = Math.floor(
-        1000 + Math.random() * 9000
-    ).toString();
+    return new Promise((resolve, reject) => {
 
-    peer = new Peer(roomCode);
+        // 隨機產生 4 碼 ID
+        const roomCode =
+            Math.floor(
+                1000 + Math.random() * 9000
+            ).toString();
 
-
-    // PeerJS 建立完成
-    peer.on("open", (id) => {
-
-        myPeerId = id;
-
-        console.log("我的 Peer ID:", id);
-
-    });
+        peer = new Peer(roomCode);
 
 
-    // 有玩家連進我的房間
-    peer.on("connection", (connection) => {
+        peer.on("open", (id) => {
 
-        console.log("有人加入房間:", connection.peer);
+            myPeerId = id;
 
-        isHost = true;
+            console.log(
+                "PeerJS 初始化成功:",
+                id
+            );
 
-        playerConnections.push(connection);
+            resolve(id);
 
-        setupConnection(connection);
-
-        updateRoomStatus();
-
-    });
+        });
 
 
-    // 發生錯誤
-    peer.on("error", (error) => {
+        peer.on("connection", (connection) => {
 
-        console.error("PeerJS 錯誤:", error);
+            console.log(
+                "收到玩家連線:",
+                connection.peer
+            );
+
+            isHost = true;
+
+            playerConnections.push(connection);
+
+            setupConnection(connection);
+
+            updateRoomStatus();
+
+        });
+
+
+        peer.on("error", (error) => {
+
+            console.error(
+                "PeerJS 錯誤:",
+                error
+            );
+
+            reject(error);
+
+        });
 
     });
 
@@ -65,7 +80,115 @@ function initPeer() {
 
 
 // ========================================
-// 設定連線
+// 建立房間
+// ========================================
+
+async function createRoom() {
+
+    try {
+
+        isHost = true;
+
+        const roomCode =
+            await createPeer();
+
+        console.log(
+            "房間建立成功:",
+            roomCode
+        );
+
+        return roomCode;
+
+    } catch (error) {
+
+        console.error(
+            "建立房間失敗:",
+            error
+        );
+
+        return null;
+
+    }
+
+}
+
+
+// ========================================
+// 加入房間
+// ========================================
+
+async function joinRoom(roomCode) {
+
+    try {
+
+        // 先建立自己的 Peer
+        await createPeer();
+
+
+        console.log(
+            "正在加入房間:",
+            roomCode
+        );
+
+
+        // 連線到房主
+        const connection =
+            peer.connect(roomCode);
+
+
+        hostConnection = connection;
+
+        isHost = false;
+
+
+        setupConnection(connection);
+
+
+        return new Promise((resolve, reject) => {
+
+            connection.on("open", () => {
+
+                console.log(
+                    "成功加入房間:",
+                    roomCode
+                );
+
+                updateRoomStatus();
+
+                resolve(true);
+
+            });
+
+
+            connection.on("error", (error) => {
+
+                console.error(
+                    "加入房間失敗:",
+                    error
+                );
+
+                reject(error);
+
+            });
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "加入房間失敗:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+// ========================================
+// 設定玩家連線
 // ========================================
 
 function setupConnection(connection) {
@@ -73,16 +196,21 @@ function setupConnection(connection) {
     connection.on("open", () => {
 
         console.log(
-            "連線成功:",
+            "連線建立:",
             connection.peer
         );
+
+        updateRoomStatus();
 
     });
 
 
     connection.on("data", (data) => {
 
-        console.log("收到資料:", data);
+        console.log(
+            "收到資料:",
+            data
+        );
 
         handleRoomData(data);
 
@@ -96,84 +224,50 @@ function setupConnection(connection) {
             connection.peer
         );
 
+
         playerConnections =
             playerConnections.filter(
                 c => c !== connection
             );
 
+
         updateRoomStatus();
 
     });
 
-}
 
+    connection.on("error", (error) => {
 
-// ========================================
-// 加入房間
-// ========================================
-
-function joinRoom(roomCode) {
-
-    if (!peer) {
-
-        initPeer();
-
-    }
-
-
-    console.log(
-        "正在加入房間:",
-        roomCode
-    );
-
-
-    const connection =
-        peer.connect(roomCode);
-
-
-    hostConnection = connection;
-
-    isHost = false;
-
-    setupConnection(connection);
-
-
-    connection.on("open", () => {
-
-        console.log(
-            "成功加入房間:",
-            roomCode
+        console.error(
+            "連線錯誤:",
+            error
         );
 
-        updateRoomStatus();
-
     });
 
 }
 
 
 // ========================================
-// 傳送資料給房主
+// 傳送給房主
 // ========================================
 
 function sendToHost(data) {
 
-    if (!hostConnection) {
+    if (
+        hostConnection &&
+        hostConnection.open
+    ) {
 
-        console.warn("目前沒有連線到房主");
-
-        return;
+        hostConnection.send(data);
 
     }
-
-
-    hostConnection.send(data);
 
 }
 
 
 // ========================================
-// 房主廣播資料
+// 房主廣播
 // ========================================
 
 function broadcast(data) {
@@ -201,18 +295,22 @@ function broadcast(data) {
 
 
 // ========================================
-// 房間資料處理
+// 接收房間資料
 // ========================================
 
 function handleRoomData(data) {
 
     console.log(
-        "收到房間資料:",
+        "房間資料:",
         data
     );
 
 
-    // 這裡之後會交給遊戲系統
+    // 下一步會在這裡加入
+    // 玩家加入
+    // 遊戲同步
+    // 關卡同步
+    // 比分同步
 }
 
 
@@ -223,7 +321,9 @@ function handleRoomData(data) {
 function updateRoomStatus() {
 
     const status =
-        document.getElementById("roomStatus");
+        document.getElementById(
+            "roomStatus"
+        );
 
 
     if (!status) {
@@ -236,12 +336,24 @@ function updateRoomStatus() {
     if (isHost) {
 
         status.textContent =
-            `🏠 房主｜等待玩家加入`;
+            `🏠 房主｜等待對手加入`;
 
     } else {
 
-        status.textContent =
-            `🔗 已連線到房主`;
+        if (
+            hostConnection &&
+            hostConnection.open
+        ) {
+
+            status.textContent =
+                `🟢 已連線到房主`;
+
+        } else {
+
+            status.textContent =
+                `⏳ 正在連線到房主...`;
+
+        }
 
     }
 
