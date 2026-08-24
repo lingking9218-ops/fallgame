@@ -1,18 +1,109 @@
 body {
     margin: 0;
     font-family: Arial, sans-serif;
+
     background: #111;
     color: white;
+
     text-align: center;
 }
 
+
 #app {
-    padding: 50px;
+    width: 90%;
+    max-width: 600px;
+
+    margin: 0 auto;
+    padding-top: 80px;
 }
 
+
+h1 {
+    font-size: 42px;
+}
+
+
+.subtitle {
+    color: #aaa;
+    margin-bottom: 40px;
+}
+
+
 button {
-    padding: 15px 30px;
-    margin: 10px;
+    padding: 14px 28px;
+
+    margin: 8px;
+
     font-size: 18px;
+
+    border: none;
+    border-radius: 8px;
+
     cursor: pointer;
+}
+
+
+button:hover {
+    transform: scale(1.05);
+}
+
+
+.join-area {
+    margin-top: 25px;
+}
+
+
+#roomCode {
+    width: 180px;
+
+    padding: 13px;
+
+    font-size: 20px;
+
+    text-align: center;
+
+    border-radius: 8px;
+    border: none;
+}
+
+
+#roomScreen {
+    margin-top: 40px;
+}
+
+
+.room-code-title {
+    color: #aaa;
+
+    font-size: 18px;
+}
+
+
+#displayRoomCode {
+    font-size: 60px;
+
+    font-weight: bold;
+
+    letter-spacing: 12px;
+
+    margin: 20px 0;
+}
+
+
+#roomStatus {
+    font-size: 20px;
+
+    color: #aaa;
+}
+
+
+.hidden {
+    display: none;
+}
+
+
+#message {
+    margin-top: 30px;
+
+    font-size: 18px;
 }
