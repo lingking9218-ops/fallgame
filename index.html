@@ -15,10 +15,62 @@
 
         <h1>🎮 AI Card Challenge</h1>
 
-        <p>玩家創造挑戰，玩家挑戰遊戲。</p>
+        <p class="subtitle">
+            玩家創造挑戰，玩家挑戰遊戲
+        </p>
 
-        <button id="createRoom">建立房間</button>
-        <button id="joinRoom">加入房間</button>
+        <!-- 主選單 -->
+        <div id="menu">
+
+            <button id="createRoom">
+                建立房間
+            </button>
+
+            <div class="join-area">
+
+                <input
+                    id="roomCode"
+                    type="text"
+                    maxlength="4"
+                    inputmode="numeric"
+                    placeholder="輸入4碼房號"
+                >
+
+                <button id="joinRoom">
+                    加入房間
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- 房間畫面 -->
+        <div id="roomScreen" class="hidden">
+
+            <h2>🏠 房間</h2>
+
+            <div class="room-code-title">
+                房間號
+            </div>
+
+            <div id="displayRoomCode">
+                ----
+            </div>
+
+            <p id="roomStatus">
+                等待對手加入...
+            </p>
+
+            <button id="leaveRoom">
+                離開房間
+            </button>
+
+        </div>
+
+
+        <!-- 訊息 -->
+        <div id="message"></div>
 
     </div>
 
